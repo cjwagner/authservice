@@ -9,16 +9,36 @@
 #include "test/common/session/mocks.h"
 #include "test/filters/oidc/mocks.h"
 
+namespace envoy {
+namespace api {
+namespace v2 {
+namespace core {
+
+void PrintTo(const ::envoy::api::v2::core::HeaderValueOption &header, ::std::ostream *os) {
+  std::string json;
+  google::protobuf::util::MessageToJsonString(header, &json);
+
+  *os << json;
+}
+
+}
+}
+}
+}
+
 namespace authservice {
 namespace filters {
 namespace oidc {
 
 using ::testing::Eq;
+using ::testing::StrEq;
 using ::testing::AnyOf;
 using ::testing::AllOf;
 using ::testing::Property;
 using ::testing::StartsWith;
 using ::testing::UnorderedElementsAre;
+
+
 
 class OidcFilterTest : public ::testing::Test {
  protected:
@@ -447,24 +467,24 @@ TEST_F(OidcFilterTest, RetrieveTokenWithOutAccessToken) {
     response.denied_response().headers(),
     UnorderedElementsAre(
       Property(&envoy::api::v2::core::HeaderValueOption::header, AllOf(
-        Property(&envoy::api::v2::core::HeaderValue::key, Eq(common::http::headers::Location)),
+        Property(&envoy::api::v2::core::HeaderValue::key, StrEq(common::http::headers::Location)),
         Property(&envoy::api::v2::core::HeaderValue::value, StartsWith(config_.landing_page()))
       )),
       Property(&envoy::api::v2::core::HeaderValueOption::header, AllOf(
-        Property(&envoy::api::v2::core::HeaderValue::key, Eq(common::http::headers::CacheControl)),
-        Property(&envoy::api::v2::core::HeaderValue::value, Eq(common::http::headers::CacheControlDirectives::NoCache))
+        Property(&envoy::api::v2::core::HeaderValue::key, StrEq(common::http::headers::CacheControl)),
+        Property(&envoy::api::v2::core::HeaderValue::value, StrEq(common::http::headers::CacheControlDirectives::NoCache))
       )),
       Property(&envoy::api::v2::core::HeaderValueOption::header, AllOf(
-        Property(&envoy::api::v2::core::HeaderValue::key, Eq(common::http::headers::Pragma)),
-        Property(&envoy::api::v2::core::HeaderValue::value, StartsWith(common::http::headers::PragmaDirectives::NoCache))
+        Property(&envoy::api::v2::core::HeaderValue::key, StrEq(common::http::headers::Pragma)),
+        Property(&envoy::api::v2::core::HeaderValue::value, StrEq(common::http::headers::PragmaDirectives::NoCache))
       )),
       Property(&envoy::api::v2::core::HeaderValueOption::header, AllOf(
-        Property(&envoy::api::v2::core::HeaderValue::key, Eq(common::http::headers::SetCookie)),
+        Property(&envoy::api::v2::core::HeaderValue::key, StrEq(common::http::headers::SetCookie)),
         Property(&envoy::api::v2::core::HeaderValue::value, AnyOf(
-          Eq("__Host-cookie-prefix-authservice-id-token-"
+          StrEq("__Host-cookie-prefix-authservice-id-token-"
              "cookie=encryptedtoken; HttpOnly; "
              "Path=/; SameSite=Lax; Secure"),
-          Eq("__Host-cookie-prefix-authservice-state-cookie=deleted; "
+          StrEq("__Host-cookie-prefix-authservice-state-cookie=deleted; "
              "HttpOnly; Path=/; SameSite=Lax; "
              "Secure")
         ))
